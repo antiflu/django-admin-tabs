@@ -4,6 +4,13 @@ from django.contrib.admin import ModelAdmin
 from django.contrib.admin.options import csrf_protect_m
 from django.db import transaction
 
+# django 1.6, 1.5 and 1.4 supports
+try:
+    atomic_decorator = transaction.atomic
+except AttributeError:
+    atomic_decorator = transaction.commit_on_success
+
+
 class AdminCol(object):
     """
     One column in the admin pages.
@@ -339,7 +346,7 @@ class TabbedModelAdmin(ModelAdmin):
         return super(TabbedModelAdmin, self).get_form(request, obj, **kwargs)
     
     @csrf_protect_m
-    @transaction.commit_on_success
+    @atomic_decorator
     def change_view(self, request, object_id, form_url='', extra_context=None):
         if extra_context is None:
             extra_context = {}
@@ -353,7 +360,7 @@ class TabbedModelAdmin(ModelAdmin):
             return super(TabbedModelAdmin, self).change_view(request, object_id, extra_context=extra_context)
     
     @csrf_protect_m
-    @transaction.commit_on_success
+    @atomic_decorator
     def add_view(self, request, form_url='', extra_context=None):
         if extra_context is None:
             extra_context = {}
